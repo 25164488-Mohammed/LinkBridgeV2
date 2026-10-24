@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      LinkBridge Minimal & Transparent Permissions Policy:
+      1. Local Wi-Fi / Hotspot socket communication: INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE
+      2. Bluetooth Classic RFCOMM communication with paired devices:
+         - On Android 9..11 (API 28..30): BLUETOOTH and BLUETOOTH_ADMIN
+         - On Android 12+ (API 31+): BLUETOOTH_CONNECT (and optional BLUETOOTH_SCAN with neverForLocation)
+         - We do NOT request ACCESS_FINE_LOCATION on Android 9..11 by defaulting to bonded/paired Bluetooth devices.
+      3. File Selection & Saving: Uses official Storage Access Framework (SAF: ACTION_OPEN_DOCUMENT / ACTION_CREATE_DOCUMENT / ACTION_OPEN_DOCUMENT_TREE).
+         Does NOT request broad READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, or MANAGE_EXTERNAL_STORAGE.
+      4. Clipboard & Background: Uses Foreground Service with visible notification and Quick Action button + system Share sheet.
+         Does NOT abuse AccessibilityService.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Bluetooth permissions scoped by Android version -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+
+    <application
+        android:allowBackup="false"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.LinkBridge">
+
+        <!-- Main Dashboard, Clipboard History, File Transfer & Settings Activity -->
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Native Android Share Target Activity for Instant Text, URL, Code & Multi-File Sending -->
+        <activity
+            android:name=".ui.ShareReceiverActivity"
+            android:exported="true"
+            android:label="@string/share_to_linkbridge"
+            android:theme="@style/Theme.LinkBridge">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
+
+        <!-- Optional User-Controlled Foreground Service with Notification Quick-Send Action -->
+        <service
+            android:name=".service.LinkBridgeForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
+    </application>
+</manifest>
